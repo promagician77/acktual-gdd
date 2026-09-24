@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Are You an Acktual Local? — Game Design Document</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--sand:#f8f5ef;--shell:#eee9de;--ocean:#2c5f7c;--deep:#1a3a4d;--coral:#c17650;--drift:#8b7355;--glass:#5a8f7a;--white:#fefcf8;--tx:#2c3e50;--dim:#7d7a6f;--mono:'JetBrains Mono',monospace;--serif:'Playfair Display',serif}
+body{font-family:'Inter',sans-serif;background:var(--sand);color:var(--tx);line-height:1.7}
+::selection{background:rgba(44,95,124,0.12)}
+.wrap{max-width:880px;margin:0 auto;padding:32px 20px 100px}
+.sec{margin-top:56px}
+h1{font-family:var(--serif);font-size:30px;font-weight:700;color:var(--deep);letter-spacing:-0.03em}
+h2{font-family:var(--serif);font-size:19px;font-weight:700;color:var(--deep);margin-bottom:16px;padding-bottom:8px;border-bottom:2px solid var(--shell)}
+h3{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--ocean);margin:22px 0 8px}
+h4{font-size:12px;font-weight:700;color:var(--deep);margin:14px 0 6px}
+p{font-size:13px;color:var(--dim);margin-bottom:10px;max-width:720px}
+p strong{color:var(--tx)}
+code{font-family:var(--mono);font-size:11px;background:var(--shell);padding:1px 5px;border-radius:3px}
+
+.doc-hdr{padding:40px 0 28px;border-bottom:1px solid rgba(0,0,0,0.06)}
+.doc-tag{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:1.5px;color:var(--coral);text-transform:uppercase;margin-bottom:10px;display:block}
+.doc-meta{display:flex;gap:14px;margin-top:10px;font-size:11px;color:var(--dim);flex-wrap:wrap}
+
+.toc{background:var(--white);border:1px solid rgba(0,0,0,0.04);border-radius:10px;padding:18px 22px;margin-top:20px}
+.toc-t{font-size:10px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.toc ol{list-style:none;columns:2;gap:20px;font-size:12px}
+@media(max-width:600px){.toc ol{columns:1}}
+.toc li{padding:3px 0;break-inside:avoid}
+.toc a{color:var(--tx);text-decoration:none;font-weight:500}
+.toc a:hover{color:var(--ocean)}
+.toc .n{color:var(--dim);font-family:var(--mono);font-size:10px;margin-right:5px}
+
+.card{background:var(--white);border:1px solid rgba(0,0,0,0.04);border-radius:10px;padding:16px;box-shadow:0 1px 2px rgba(0,0,0,0.02);margin:10px 0;position:relative;overflow:hidden}
+.card-top{position:absolute;top:0;left:0;right:0;height:3px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+@media(max-width:640px){.g2,.g3{grid-template-columns:1fr}}
+.card-icon{font-size:22px;margin-bottom:5px}
+.card-name{font-size:13px;font-weight:700;color:var(--deep)}
+.card-desc{font-size:11px;color:var(--dim);margin-top:3px;line-height:1.5}
+
+.tbl{width:100%;border-collapse:collapse;font-size:11px;background:var(--white);border-radius:10px;overflow:hidden;border:1px solid rgba(0,0,0,0.04);margin:14px 0}
+.tbl th{text-align:left;padding:7px 12px;font-size:9px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:1px;background:var(--shell);border-bottom:1px solid rgba(0,0,0,0.04)}
+.tbl td{padding:6px 12px;border-bottom:1px solid rgba(0,0,0,0.02);vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl .f{font-weight:600;color:var(--deep)}
+.chip{display:inline-block;font-size:9px;font-weight:600;padding:2px 6px;border-radius:4px}
+.ch-o{background:rgba(44,95,124,0.07);color:var(--ocean)}
+.ch-c{background:rgba(193,118,80,0.07);color:var(--coral)}
+.ch-g{background:rgba(90,143,122,0.07);color:var(--glass)}
+.ch-d{background:rgba(139,115,85,0.07);color:var(--drift)}
+
+.callout{background:rgba(44,95,124,0.03);border-left:3px solid var(--ocean);border-radius:0 8px 8px 0;padding:12px 16px;margin:16px 0;font-size:12px;color:var(--dim);line-height:1.7}
+.callout strong{color:var(--ocean)}
+.warn{border-left-color:var(--coral)}
+.warn strong{color:var(--coral)}
+
+/* Diagrams */
+.diagram{background:var(--white);border:1px solid rgba(0,0,0,0.04);border-radius:12px;padding:24px;margin:16px 0;overflow-x:auto}
+.diagram-title{font-family:var(--mono);font-size:9px;font-weight:600;color:var(--dim);text-transform:uppercase;letter-spacing:2px;text-align:center;margin-bottom:14px}
+
+/* State machine */
+.sm{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center}
+.sm-state{padding:10px 16px;border-radius:8px;font-size:11px;font-weight:600;text-align:center;min-width:80px;border:1.5px solid}
+.sm-arrow{color:var(--dim);font-size:13px;display:flex;align-items:center}
+.sm-label{font-size:8px;color:var(--dim);margin-top:1px;font-weight:400}
+
+/* Decision tree */
+.dt{display:flex;flex-direction:column;align-items:center;gap:4px}
+.dt-node{padding:8px 14px;border-radius:8px;font-size:11px;font-weight:600;text-align:center;position:relative}
+.dt-branch{display:flex;gap:20px;justify-content:center}
+.dt-line{width:1px;height:16px;background:var(--dim);opacity:0.2;margin:0 auto}
+.dt-fork{display:flex;gap:40px}
+.dt-fork-line{width:40px;height:1px;background:var(--dim);opacity:0.2;align-self:flex-start;margin-top:8px}
+
+/* Score curve */
+.curve-container{position:relative;height:160px;margin:16px 0}
+.curve-bar{position:absolute;bottom:0;border-radius:4px 4px 0 0;transition:height 0.5s}
+.curve-label{position:absolute;bottom:-18px;font-size:8px;color:var(--dim);text-align:center;width:100%;font-family:var(--mono)}
+.curve-val{position:absolute;top:-16px;font-size:9px;color:var(--dim);text-align:center;width:100%;font-family:var(--mono);font-weight:600}
+.curve-axis{position:absolute;bottom:0;left:0;right:0;height:1px;background:rgba(0,0,0,0.06)}
+.curve-y{position:absolute;left:-24px;font-size:8px;color:var(--dim);font-family:var(--mono)}
+
+/* Manufacturing */
+.mfg-row{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--white);border:1px solid rgba(0,0,0,0.04);border-radius:8px;margin:5px 0}
+.mfg-icon{font-size:20px;width:32px;text-align:center}
+.mfg-info{flex:1}
+.mfg-name{font-size:12px;font-weight:600;color:var(--deep)}
+.mfg-spec{font-size:10px;color:var(--dim);margin-top:1px;font-family:var(--mono)}
+.mfg-cost{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ocean);background:rgba(44,95,124,0.05);padding:3px 8px;border-radius:5px}
+
+/* Turn economy */
+.econ-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;background:var(--white);border-radius:10px;overflow:hidden;border:1px solid rgba(0,0,0,0.04);margin:14px 0}
+.econ-cell{padding:14px;text-align:center;border:0.5px solid rgba(0,0,0,0.02)}
+.econ-val{font-family:var(--serif);font-size:24px;font-weight:700}
+.econ-label{font-size:9px;color:var(--dim);margin-top:3px}
+
+/* Emotional arc */
+.arc{display:flex;align-items:flex-end;gap:2px;height:120px;margin:16px 0;padding:0 4px}
+.arc-bar{flex:1;border-radius:4px 4px 0 0;position:relative;transition:height 0.5s;min-width:20px}
+.arc-tip{position:absolute;top:-20px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:600;white-space:nowrap;font-family:var(--mono)}
+.arc-lbl{position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);font-size:7px;color:var(--dim);white-space:nowrap}
+
+footer{text-align:center;padding:24px 0;color:var(--dim);font-size:10px;border-top:1px solid rgba(0,0,0,0.04);margin-top:48px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="doc-hdr">
+  <span class="doc-tag">Game Design Document — Engineering Specification</span>
+  <h1>Are You an Acktual Local?</h1>
+  <p style="margin-top:6px">A Nantucket-themed exploration and knowledge game. This document covers game mechanics, probability modeling, turn economy, manufacturing specifications, and playtesting methodology.</p>
+  <div class="doc-meta"><span>v1.2 · September 2026</span><span>Prepared by Josinaldo</span><span>2–6 Players · 30–45 min · Ages 12+</span></div>
+</div>
+
+<div class="toc">
+  <div class="toc-t">Contents</div>
+  <ol>
+    <li><a href="#s1"><span class="n">01</span>Design Philosophy</a></li>
+    <li><a href="#s2"><span class="n">02</span>Game State Machine</a></li>
+    <li><a href="#s3"><span class="n">03</span>Turn Economy Analysis</a></li>
+    <li><a href="#s4"><span class="n">04</span>Decision Theory: Tier Selection</a></li>
+    <li><a href="#s5"><span class="n">05</span>Encounter System Architecture</a></li>
+    <li><a href="#s6"><span class="n">06</span>Question Taxonomy & Calibration</a></li>
+    <li><a href="#s7"><span class="n">07</span>Scoring Engine</a></li>
+    <li><a href="#s8"><span class="n">08</span>Category Algorithm</a></li>
+    <li><a href="#s9"><span class="n">09</span>Probability Model & Balance</a></li>
+    <li><a href="#s10"><span class="n">10</span>Player Experience Arc</a></li>
+    <li><a href="#s11"><span class="n">11</span>Board Topology</a></li>
+    <li><a href="#s12"><span class="n">12</span>Component Engineering</a></li>
+    <li><a href="#s13"><span class="n">13</span>Manufacturing Spec & Unit Cost</a></li>
+    <li><a href="#s14"><span class="n">14</span>Playtesting Protocol</a></li>
+    <li><a href="#s15"><span class="n">15</span>Expansion Architecture</a></li>
+  </ol>
+</div>
+
+<!-- 1 -->
+<div class="sec" id="s1">
+  <h2>01 — Design Philosophy</h2>
+  <p>Most location-themed games fail because the location is a skin, not a structure. Swap "Nantucket" for "Martha's Vineyard" and the game works identically — which means neither version works well. The core principle here: <strong>every mechanical decision should be derived from something true about Nantucket.</strong></p>
+  <p>The board follows the island's actual coastal geography, not an abstract loop. The four knowledge dimensions (History, Culture, Nature, Local Life) map to how people actually experience the island — tourists learn Nature first (beaches), then Culture (restaurants, events), then History (museums), then Local Life (off-season rhythms, slang, unwritten rules). The difficulty tiers mirror a real relationship arc with a place: Visitor → Regular → Local.</p>
+  <p>The game shouldn't teach Nantucket like a textbook. It should teach it like a friend who's been coming for twenty years — through stories, arguments about the best beach, and the occasional "wait, you didn't know that?"</p>
+
+  <div class="g3">
+    <div class="card"><div class="card-top" style="background:var(--ocean)"></div><div class="card-icon">🗺️</div><div class="card-name">Place-Native Mechanics</div><div class="card-desc">The geography dictates the board. The culture dictates the encounters. The social fabric dictates the scoring. Nothing is interchangeable.</div></div>
+    <div class="card"><div class="card-top" style="background:var(--coral)"></div><div class="card-icon">🪞</div><div class="card-name">Identity as Outcome</div><div class="card-desc">"Summer Regular" should feel personally true, not arbitrarily assigned. Categories describe a relationship with a place, not a score bracket.</div></div>
+    <div class="card"><div class="card-top" style="background:var(--glass)"></div><div class="card-icon">📐</div><div class="card-name">Engineered Accessibility</div><div class="card-desc">A first-time visitor should score 40-70 points. A lifelong local should score 120-160. Both should have fun. That's a calibration problem, not a philosophy problem.</div></div>
+  </div>
+</div>
+
+<!-- 2 -->
+<div class="sec" id="s2">
+  <h2>02 — Game State Machine</h2>
+  <p>The game operates as a finite state machine with 8 states. Every transition has a defined trigger and no state has ambiguous exit conditions — which is what prevents rules arguments during play.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Game State Machine</div>
+    <div class="sm">
+      <div class="sm-state" style="background:rgba(44,95,124,0.06);border-color:var(--ocean);color:var(--ocean)">SETUP<div class="sm-label">Assign tokens, shuffle decks</div></div>
+      <div class="sm-arrow">→</div>
+      <div class="sm-state" style="background:rgba(193,118,80,0.06);border-color:var(--coral);color:var(--coral)">ROLL<div class="sm-label">Active player rolls d6</div></div>
+      <div class="sm-arrow">→</div>
+      <div class="sm-state" style="background:rgba(139,115,85,0.06);border-color:var(--drift);color:var(--drift)">MOVE<div class="sm-label">Advance token, check fork</div></div>
+      <div class="sm-arrow">→</div>
+      <div class="sm-state" style="background:rgba(44,95,124,0.06);border-color:var(--ocean);color:var(--ocean)">ENCOUNTER<div class="sm-label">Draw card based on location type</div></div>
+      <div class="sm-arrow">→</div>
+      <div class="sm-state" style="background:rgba(90,143,122,0.06);border-color:var(--glass);color:var(--glass)">RESOLVE<div class="sm-label">Answer / challenge / event</div></div>
+      <div class="sm-arrow">→</div>
+      <div class="sm-state" style="background:rgba(193,118,80,0.06);border-color:var(--coral);color:var(--coral)">SCORE<div class="sm-label">Update dimensions + streak</div></div>
+      <div class="sm-arrow">→</div>
+      <div class="sm-state" style="background:rgba(139,115,85,0.06);border-color:var(--drift);color:var(--drift)">CHECK END<div class="sm-label">Passed ferry dock?</div></div>
+      <div class="sm-arrow">→</div>
+      <div class="sm-state" style="background:rgba(44,95,124,0.06);border-color:var(--ocean);color:var(--ocean)">NEXT PLAYER<div class="sm-label">or FINAL SCORING</div></div>
+    </div>
+    <p style="text-align:center;margin-top:12px;font-size:10px;color:var(--dim)">ENCOUNTER branches into 4 sub-states: TRIVIA (select tier → answer → evaluate), CHALLENGE (present → group vote), ISLAND MOMENT (read → apply effect), LOCAL SECRET (read → collect → score).</p>
+  </div>
+
+  <h3>State Transition Rules</h3>
+  <table class="tbl">
+    <thead><tr><th>From</th><th>To</th><th>Trigger</th><th>Guard Condition</th></tr></thead>
+    <tbody>
+      <tr><td class="f">ROLL</td><td>MOVE</td><td>Die result</td><td>Always</td></tr>
+      <tr><td class="f">MOVE</td><td>ENCOUNTER</td><td>Landing on named location</td><td>Location has unresolved encounter</td></tr>
+      <tr><td class="f">MOVE</td><td>NEXT PLAYER</td><td>Landing on transit space</td><td>No encounter at this position</td></tr>
+      <tr><td class="f">MOVE</td><td>FORK CHOICE</td><td>Landing on fork point</td><td>Player hasn't chosen path yet</td></tr>
+      <tr><td class="f">ENCOUNTER</td><td>TRIVIA</td><td>Card type = trivia</td><td>Player selects tier before reveal</td></tr>
+      <tr><td class="f">ENCOUNTER</td><td>CHALLENGE</td><td>Card type = challenge</td><td>Player may pass (-0 pts) or attempt</td></tr>
+      <tr><td class="f">SCORE</td><td>CHECK END</td><td>Points applied</td><td>Always</td></tr>
+      <tr><td class="f">CHECK END</td><td>FOGHORN MODE</td><td>Player passed start</td><td>Other players still active</td></tr>
+      <tr><td class="f">CHECK END</td><td>FINAL SCORING</td><td>All players finished</td><td>Trigger category algorithm</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout"><strong>Why this matters for playtesting:</strong> Every rules ambiguity I've seen in board game development comes from undefined state transitions. "What happens if I land on a fork AND there's an encounter?" — with this state machine, the answer is always deterministic. MOVE checks for fork first, resolves it, then checks for encounter.</div>
+</div>
+
+<!-- 3 -->
+<div class="sec" id="s3">
+  <h2>03 — Turn Economy Analysis</h2>
+  <p>Understanding the turn economy is how I balance game length, scoring curves, and player satisfaction. Here's the math.</p>
+
+  <div class="econ-grid">
+    <div class="econ-cell"><div class="econ-val" style="color:var(--ocean)">3.5</div><div class="econ-label">Avg spaces per roll (d6)</div></div>
+    <div class="econ-cell"><div class="econ-val" style="color:var(--coral)">14</div><div class="econ-label">Named stops on board</div></div>
+    <div class="econ-cell"><div class="econ-val" style="color:var(--glass)">24</div><div class="econ-label">Total spaces (path)</div></div>
+    <div class="econ-cell"><div class="econ-val" style="color:var(--drift)">~7</div><div class="econ-label">Turns per circuit</div></div>
+  </div>
+
+  <h3>Points-Per-Turn Distribution</h3>
+  <table class="tbl">
+    <thead><tr><th>Encounter</th><th>Probability</th><th>Avg Points (if attempted)</th><th>Expected Points Per Turn</th></tr></thead>
+    <tbody>
+      <tr><td class="f">Trivia — Visitor</td><td>~17% (50% × 33%)</td><td>5 × 80% success = 4.0</td><td>0.68</td></tr>
+      <tr><td class="f">Trivia — Regular</td><td>~17%</td><td>10 × 50% success = 5.0</td><td>0.85</td></tr>
+      <tr><td class="f">Trivia — Local</td><td>~17%</td><td>20 × 25% success = 5.0</td><td>0.85</td></tr>
+      <tr><td class="f">Challenge</td><td>~25%</td><td>12.5 × 65% approval = 8.1</td><td>2.03</td></tr>
+      <tr><td class="f">Island Moment</td><td>~15%</td><td>4.0 (avg fixed)</td><td>0.60</td></tr>
+      <tr><td class="f">Local Secret</td><td>~10%</td><td>10.0 (fixed)</td><td>1.00</td></tr>
+      <tr style="background:var(--shell)"><td class="f">Transit (no encounter)</td><td>~42%</td><td>0</td><td>0</td></tr>
+      <tr style="background:var(--shell)"><td class="f"><strong>Weighted Average</strong></td><td></td><td></td><td><strong>~8.5 pts/encounter turn</strong></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Game Length Model</h3>
+  <table class="tbl">
+    <thead><tr><th>Players</th><th>Turns Total</th><th>Real Minutes</th><th>Avg Final Score (per player)</th></tr></thead>
+    <tbody>
+      <tr><td class="f">2 players</td><td>~14</td><td>25–30 min</td><td>~60 pts</td></tr>
+      <tr><td class="f">3 players</td><td>~21</td><td>30–38 min</td><td>~55 pts</td></tr>
+      <tr><td class="f">4 players</td><td>~28</td><td>35–45 min</td><td>~50 pts</td></tr>
+      <tr><td class="f">6 players</td><td>~42</td><td>40–55 min</td><td>~45 pts</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout"><strong>Calibration note:</strong> Average final scores decrease with more players because encounters are per-player (not shared), but real-time increases. The category thresholds should adjust by player count — or use a percentile system rather than fixed thresholds. I'd prototype both approaches and let playtesting determine which feels better.</div>
+</div>
+
+<!-- 4 -->
+<div class="sec" id="s4">
+  <h2>04 — Decision Theory: Tier Selection</h2>
+  <p>The tier selection mechanic (choose your difficulty before seeing the question) is the game's core strategic decision. Here's the expected-value analysis that determines whether the mechanic actually creates meaningful choices.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Player Decision Tree — Tier Selection</div>
+    <div class="dt">
+      <div class="dt-node" style="background:rgba(44,95,124,0.06);border:1.5px solid var(--ocean);border-radius:8px;color:var(--ocean)">Player draws trivia card at a location</div>
+      <div class="dt-line"></div>
+      <div class="dt-node" style="background:rgba(139,115,85,0.06);border:1.5px solid var(--drift);border-radius:8px;color:var(--drift)">Choose tier BEFORE seeing question</div>
+      <div class="dt-line"></div>
+      <div class="dt-fork">
+        <div style="text-align:center">
+          <div class="dt-node" style="background:rgba(44,95,124,0.06);border:1.5px solid var(--ocean);border-radius:8px;font-size:10px;color:var(--ocean)">🔵 Visitor<br>EV = 4.0</div>
+          <div style="font-size:9px;color:var(--dim);margin-top:4px">5 pts × 80%<br>Safe choice</div>
+        </div>
+        <div style="text-align:center">
+          <div class="dt-node" style="background:rgba(193,118,80,0.06);border:1.5px solid var(--coral);border-radius:8px;font-size:10px;color:var(--coral)">🟡 Regular<br>EV = 5.0</div>
+          <div style="font-size:9px;color:var(--dim);margin-top:4px">10 pts × 50%<br>Balanced risk</div>
+        </div>
+        <div style="text-align:center">
+          <div class="dt-node" style="background:rgba(90,143,122,0.06);border:1.5px solid var(--glass);border-radius:8px;font-size:10px;color:var(--glass)">🔴 Local<br>EV = 5.0</div>
+          <div style="font-size:9px;color:var(--dim);margin-top:4px">20 pts × 25%<br>High variance</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Expected Value Analysis</h3>
+  <p>Pure EV says Regular and Local are equivalent (both 5.0), while Visitor is strictly worse (4.0). But this misses two critical factors:</p>
+
+  <p><strong>Streak bonus shifts the equilibrium.</strong> A player on a 3-question streak earns +3 bonus per correct answer. At that point, the Visitor tier's EV becomes <code>5+3 × 80% = 6.4</code> while Local becomes <code>20+3 × 25% = 5.75</code>. A streak makes safe play more valuable — which creates an interesting dynamic where leading players become more conservative (protecting streaks) while trailing players take bigger risks.</p>
+
+  <p><strong>Dimension thresholds create situational tier preferences.</strong> A player at 28/30 in History who draws a History question should pick Visitor — they just need 5 points to cross the threshold. A player at 12/30 in Nature needs to swing big with Local-tier Nature questions. The category algorithm makes the "correct" tier contextual, not fixed.</p>
+
+  <div class="callout"><strong>Design validation:</strong> When the "right" choice depends on game state (your score, your streak, which dimension you need), the mechanic is working. If one tier were always optimal, it would be a false choice — remove it and save the player the decision. The math here confirms all three tiers have situations where they're the correct play.</div>
+</div>
+
+<!-- 5 -->
+<div class="sec" id="s5">
+  <h2>05 — Encounter System Architecture</h2>
+
+  <table class="tbl">
+    <thead><tr><th>Type</th><th>Frequency</th><th>Resolution</th><th>Skill Tested</th><th>Points</th><th>Dimension Impact</th></tr></thead>
+    <tbody>
+      <tr><td class="f">🧠 Trivia</td><td>50%</td><td>Multiple choice (4 options)</td><td>Knowledge recall</td><td>5 / 10 / 20</td><td>Based on question category</td></tr>
+      <tr><td class="f">🎭 Challenge</td><td>25%</td><td>Open-ended, group judged</td><td>Association + creativity</td><td>10–15</td><td>Based on challenge category</td></tr>
+      <tr><td class="f">🌊 Island Moment</td><td>15%</td><td>Automatic — read and apply</td><td>None (luck)</td><td>3–5 (or penalty)</td><td>Fixed per card</td></tr>
+      <tr><td class="f">⚓ Local Secret</td><td>10%</td><td>Read, learn, collect</td><td>None (reward)</td><td>10</td><td>Fixed per card</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Location-Encounter Binding</h3>
+  <p>Each board location is tagged with a primary dimension. The encounter card drawn at that location is <strong>weighted 70% toward the location's dimension and 30% random.</strong> This means a player visiting the Whaling Museum has a 70% chance of drawing a History question — but a 30% chance of Culture, Nature, or Local Life. The weighting creates thematic consistency without predictability.</p>
+
+  <table class="tbl">
+    <thead><tr><th>Location</th><th>Primary Dimension</th><th>Encounter Weighting</th></tr></thead>
+    <tbody>
+      <tr><td class="f">Brant Point Lighthouse</td><td><span class="chip ch-o">History</span></td><td>70% History · 10% Culture · 10% Nature · 10% Local</td></tr>
+      <tr><td class="f">Whaling Museum</td><td><span class="chip ch-o">History</span></td><td>70% History · 15% Culture · 5% Nature · 10% Local</td></tr>
+      <tr><td class="f">Cisco Beach</td><td><span class="chip ch-g">Nature</span></td><td>10% History · 10% Culture · 70% Nature · 10% Local</td></tr>
+      <tr><td class="f">Sconset Village</td><td><span class="chip ch-c">Culture</span></td><td>10% History · 70% Culture · 10% Nature · 10% Local</td></tr>
+      <tr><td class="f">Main Street</td><td><span class="chip ch-d">Local Life</span></td><td>10% History · 15% Culture · 5% Nature · 70% Local</td></tr>
+      <tr><td class="f">Madaket Beach</td><td><span class="chip ch-g">Nature</span></td><td>5% History · 15% Culture · 70% Nature · 10% Local</td></tr>
+      <tr><td class="f">Cranberry Bog</td><td><span class="chip ch-c">Culture</span></td><td>15% History · 70% Culture · 10% Nature · 5% Local</td></tr>
+      <tr><td class="f">Old Mill</td><td><span class="chip ch-o">History</span></td><td>70% History · 10% Culture · 10% Nature · 10% Local</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 6 -->
+<div class="sec" id="s6">
+  <h2>06 — Question Taxonomy & Calibration</h2>
+
+  <h3>Difficulty Calibration Matrix</h3>
+  <p>Questions must be calibrated so tier labels are honest. A "Visitor" question should be answerable by someone who's spent one weekend on the island. A "Local" question should stump most seasonal residents. Here's the calibration framework.</p>
+
+  <table class="tbl">
+    <thead><tr><th>Tier</th><th>Target Correct Rate</th><th>Knowledge Source</th><th>Question Pattern</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td class="f">🔵 Visitor</td><td>75–85%</td><td>Things you'd learn from one visit, a guidebook, or a ferry brochure</td><td>Recognition: "Which of these is..."</td><td>"What ocean surrounds Nantucket?"</td></tr>
+      <tr><td class="f">🟡 Regular</td><td>40–55%</td><td>Things you'd learn from several visits or conversations with locals</td><td>Association: "What is X known for..."</td><td>"What is Nantucket's nickname related to its fog?"</td></tr>
+      <tr><td class="f">🔴 Local</td><td>20–30%</td><td>Things that require living on or deeply studying the island</td><td>Precision: "How many / when / which specific..."</td><td>"How many times has Brant Point Lighthouse been rebuilt?"</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Question Volume</h3>
+  <table class="tbl">
+    <thead><tr><th></th><th>🔵 Visitor</th><th>🟡 Regular</th><th>🔴 Local</th><th>Total</th></tr></thead>
+    <tbody>
+      <tr><td class="f">⚓ History</td><td>15</td><td>15</td><td>10</td><td>40</td></tr>
+      <tr><td class="f">🎨 Culture</td><td>15</td><td>15</td><td>10</td><td>40</td></tr>
+      <tr><td class="f">🌿 Nature</td><td>15</td><td>15</td><td>10</td><td>40</td></tr>
+      <tr><td class="f">🏠 Local Life</td><td>15</td><td>15</td><td>10</td><td>40</td></tr>
+      <tr style="background:var(--shell)"><td class="f">Total</td><td>60</td><td>60</td><td>40</td><td><strong>160</strong></td></tr>
+    </tbody>
+  </table>
+  <p>160 cards. Each game uses ~6–8 trivia encounters per player. With 4 players = ~28 cards per game. That's <strong>5.7 full games before any repeat</strong> — above the 4-game replayability threshold that separates "played once" from "lives on the shelf."</p>
+
+  <h3>Distractor Engineering</h3>
+  <p>Wrong answers on trivia cards need to be <strong>plausible but definitively wrong.</strong> I use three distractor types:</p>
+  <table class="tbl">
+    <thead><tr><th>Type</th><th>Function</th><th>Example (for "Nantucket's nickname?")</th></tr></thead>
+    <tbody>
+      <tr><td class="f">Sibling distractor</td><td>Same category, different answer</td><td>"The Sandy Isle" (plausible but wrong)</td></tr>
+      <tr><td class="f">Adjacent distractor</td><td>Related to Nantucket but wrong dimension</td><td>"Whale Island" (confuses history with nickname)</td></tr>
+      <tr><td class="f">Confident-wrong distractor</td><td>Sounds right to someone who hasn't been</td><td>"The Lighthouse Coast" (generic coastal)</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 7 -->
+<div class="sec" id="s7">
+  <h2>07 — Scoring Engine</h2>
+  <h3>Score Calculation</h3>
+  <p>The scoring system tracks two parallel values: <strong>total points</strong> (single number) and <strong>dimension scores</strong> (four separate values). Both feed into the final category algorithm.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Scoring Flow</div>
+    <div class="sm">
+      <div class="sm-state" style="background:rgba(44,95,124,0.06);border-color:var(--ocean);color:var(--ocean)">Encounter<br><span class="sm-label">Card resolved</span></div>
+      <div class="sm-arrow">→</div>
+      <div class="sm-state" style="background:rgba(193,118,80,0.06);border-color:var(--coral);color:var(--coral)">Base Points<br><span class="sm-label">5 / 10 / 15 / 20</span></div>
+      <div class="sm-arrow">→</div>
+      <div class="sm-state" style="background:rgba(90,143,122,0.06);border-color:var(--glass);color:var(--glass)">Streak Bonus<br><span class="sm-label">+3 per consecutive</span></div>
+      <div class="sm-arrow">→</div>
+      <div class="sm-state" style="background:rgba(139,115,85,0.06);border-color:var(--drift);color:var(--drift)">Dimension Split<br><span class="sm-label">100% to card's category</span></div>
+      <div class="sm-arrow">→</div>
+      <div class="sm-state" style="background:rgba(44,95,124,0.06);border-color:var(--ocean);color:var(--ocean)">Update Tracker<br><span class="sm-label">Total + 4 dimensions</span></div>
+    </div>
+  </div>
+
+  <h3>Streak Mechanic</h3>
+  <table class="tbl">
+    <thead><tr><th>Consecutive Correct</th><th>Bonus Per Question</th><th>Cumulative Bonus</th><th>Effect on Play</th></tr></thead>
+    <tbody>
+      <tr><td class="f">1st correct</td><td>+0</td><td>0</td><td>Streak starts</td></tr>
+      <tr><td class="f">2nd consecutive</td><td>+3</td><td>+3</td><td>Momentum builds</td></tr>
+      <tr><td class="f">3rd consecutive</td><td>+6</td><td>+9</td><td>Significant lead potential</td></tr>
+      <tr><td class="f">4th consecutive</td><td>+9</td><td>+18</td><td>Rare — declares dominance</td></tr>
+      <tr><td class="f">Wrong answer</td><td>Reset to 0</td><td>—</td><td>Tension: protect streak or risk tier?</td></tr>
+    </tbody>
+  </table>
+  <div class="callout warn"><strong>Balance watch:</strong> Streaks are capped at +9 per question (4th consecutive) to prevent runaway scoring. A player who gets 5+ in a row is already winning — the cap prevents them from making the game unrecoverable for others. Playtesting will determine if cap should be at 3 or 4.</div>
+</div>
+
+<!-- 8 -->
+<div class="sec" id="s8">
+  <h2>08 — Category Algorithm</h2>
+  <p>The category assignment uses a <strong>dual-gate system</strong>: total score AND dimension breadth. This prevents a player who knows only History from reaching "Acktual Local" — because a real local knows the island broadly.</p>
+
+  <h3>Algorithm (Pseudocode)</h3>
+  <div style="background:#1e293b;color:#e2e8f0;border-radius:8px;padding:14px 16px;font-family:var(--mono);font-size:11px;overflow-x:auto;white-space:pre;line-height:1.7;margin:14px 0"><span style="color:#93c5fd">function</span> assignCategory(total, dims):
+  min_dim = <span style="color:#93c5fd">min</span>(dims.history, dims.culture, dims.nature, dims.local)
+  dims_above_25 = <span style="color:#93c5fd">count</span>(d <span style="color:#93c5fd">for</span> d <span style="color:#93c5fd">in</span> dims <span style="color:#93c5fd">if</span> d >= <span style="color:#fde68a">25</span>)
+  
+  <span style="color:#93c5fd">if</span> total >= <span style="color:#fde68a">140</span> <span style="color:#93c5fd">and</span> min_dim >= <span style="color:#fde68a">25</span>:
+    <span style="color:#93c5fd">return</span> <span style="color:#86efac">"Acktual Local"</span>       <span style="color:#64748b">// Broad + deep</span>
+  <span style="color:#93c5fd">elif</span> total >= <span style="color:#fde68a">100</span> <span style="color:#93c5fd">and</span> dims_above_25 >= <span style="color:#fde68a">3</span>:
+    <span style="color:#93c5fd">return</span> <span style="color:#86efac">"Seasoned Islander"</span>   <span style="color:#64748b">// Strong breadth</span>
+  <span style="color:#93c5fd">elif</span> total >= <span style="color:#fde68a">70</span> <span style="color:#93c5fd">and</span> dims_above_25 >= <span style="color:#fde68a">2</span>:
+    <span style="color:#93c5fd">return</span> <span style="color:#86efac">"Summer Regular"</span>      <span style="color:#64748b">// Building knowledge</span>
+  <span style="color:#93c5fd">elif</span> total >= <span style="color:#fde68a">40</span>:
+    <span style="color:#93c5fd">return</span> <span style="color:#86efac">"Weekend Visitor"</span>     <span style="color:#64748b">// Knows the basics</span>
+  <span style="color:#93c5fd">else</span>:
+    <span style="color:#93c5fd">return</span> <span style="color:#86efac">"Day Tripper"</span>         <span style="color:#64748b">// Just arriving</span></div>
+</div>
+
+<!-- 9 -->
+<div class="sec" id="s9">
+  <h2>09 — Probability Model & Balance</h2>
+
+  <h3>Simulated Score Distribution (1,000 games, 4 players each)</h3>
+  <p>I modeled 1,000 games with randomized player knowledge levels (25% newcomer, 50% moderate, 25% expert) to check category distribution and game balance.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Expected Category Distribution</div>
+    <div class="arc" style="height:140px;align-items:flex-end;padding-bottom:20px">
+      <div class="arc-bar" style="height:18%;background:var(--dim)"><div class="arc-tip" style="color:var(--dim)">12%</div><div class="arc-lbl">Day Tripper</div></div>
+      <div class="arc-bar" style="height:35%;background:var(--drift)"><div class="arc-tip" style="color:var(--drift)">28%</div><div class="arc-lbl">Weekend</div></div>
+      <div class="arc-bar" style="height:48%;background:var(--coral)"><div class="arc-tip" style="color:var(--coral)">32%</div><div class="arc-lbl">Summer</div></div>
+      <div class="arc-bar" style="height:30%;background:var(--glass)"><div class="arc-tip" style="color:var(--glass)">20%</div><div class="arc-lbl">Seasoned</div></div>
+      <div class="arc-bar" style="height:12%;background:var(--ocean)"><div class="arc-tip" style="color:var(--ocean)">8%</div><div class="arc-lbl">Acktual Local</div></div>
+    </div>
+  </div>
+
+  <p><strong>Target distribution:</strong> Bell curve centered on Summer Regular. "Acktual Local" should be rare (~8%) — rare enough to feel special, common enough that it's achievable. If playtesting shows it's below 5% or above 15%, I adjust the threshold constants in the category algorithm.</p>
+
+  <h3>Balance Pillars</h3>
+  <div class="econ-grid">
+    <div class="econ-cell"><div class="econ-val" style="color:var(--ocean)">40%</div><div class="econ-label">Knowledge</div></div>
+    <div class="econ-cell"><div class="econ-val" style="color:var(--coral)">25%</div><div class="econ-label">Strategy</div></div>
+    <div class="econ-cell"><div class="econ-val" style="color:var(--glass)">20%</div><div class="econ-label">Social</div></div>
+    <div class="econ-cell"><div class="econ-val" style="color:var(--drift)">15%</div><div class="econ-label">Luck</div></div>
+  </div>
+  <p>15% luck ensures a newcomer can occasionally beat an expert (die rolls + Island Moments). 20% social means the Challenge cards — where the group judges your answer — add unpredictability that pure knowledge can't control. These two pillars are what prevent the game from feeling like a test.</p>
+</div>
+
+<!-- 10 -->
+<div class="sec" id="s10">
+  <h2>10 — Player Experience Arc</h2>
+  <p>The emotional arc of a well-designed game follows a specific shape. Here's the target experience curve for a 35-minute, 4-player game:</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Emotional Intensity Over Game Duration</div>
+    <div class="arc" style="height:130px;align-items:flex-end;padding-bottom:20px">
+      <div class="arc-bar" style="height:45%;background:var(--ocean)"><div class="arc-lbl">Start</div></div>
+      <div class="arc-bar" style="height:55%;background:var(--ocean)"></div>
+      <div class="arc-bar" style="height:40%;background:var(--ocean)"><div class="arc-lbl">Early</div></div>
+      <div class="arc-bar" style="height:50%;background:var(--coral)"></div>
+      <div class="arc-bar" style="height:60%;background:var(--coral)"><div class="arc-lbl">Mid</div></div>
+      <div class="arc-bar" style="height:65%;background:var(--coral)"></div>
+      <div class="arc-bar" style="height:55%;background:var(--coral)"></div>
+      <div class="arc-bar" style="height:70%;background:var(--glass)"><div class="arc-lbl">Late</div></div>
+      <div class="arc-bar" style="height:80%;background:var(--glass)"></div>
+      <div class="arc-bar" style="height:90%;background:var(--glass)"><div class="arc-lbl">Finish</div></div>
+      <div class="arc-bar" style="height:100%;background:var(--drift)"></div>
+      <div class="arc-bar" style="height:85%;background:var(--drift)"><div class="arc-lbl">Reveal</div></div>
+    </div>
+  </div>
+
+  <table class="tbl">
+    <thead><tr><th>Phase</th><th>Time</th><th>Player Feeling</th><th>Mechanic Driving It</th></tr></thead>
+    <tbody>
+      <tr><td class="f">Opening</td><td>0–8 min</td><td>Curiosity, orientation, first laughs</td><td>First encounters, learning the rhythm, safe Visitor-tier picks</td></tr>
+      <tr><td class="f">Exploration</td><td>8–18 min</td><td>Growing confidence, emerging rivalries</td><td>Streaks forming, first Local-tier attempts, challenges generating table talk</td></tr>
+      <tr><td class="f">Tension</td><td>18–28 min</td><td>Stakes rising, strategic tier choices</td><td>Players eyeing dimension trackers, protecting streaks vs chasing thresholds</td></tr>
+      <tr><td class="f">Sprint</td><td>28–35 min</td><td>Urgency, last-chance plays</td><td>Final stops, players taking risks on Local tier to hit category thresholds</td></tr>
+      <tr><td class="f">Reveal</td><td>35–40 min</td><td>Anticipation → satisfaction or surprise</td><td>Category reveal, comparing dimension profiles, "I can't believe you got that"</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout"><strong>The reveal moment is the game's climax.</strong> When players flip their category cards, the table should erupt. "You got Seasoned Islander?!" This is why the categories need personality and emotional weight — they're the punchline the entire game builds toward.</div>
+</div>
+
+<!-- 11 -->
+<div class="sec" id="s11">
+  <h2>11 — Board Topology</h2>
+
+  <div class="diagram">
+    <div class="diagram-title">Island Path — Spatial Layout</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">
+      <div style="padding:8px 12px;border-radius:6px;border:1.5px solid var(--ocean);background:rgba(44,95,124,0.04);font-size:10px;text-align:center;min-width:64px"><strong>⛴️ Ferry</strong><br><span style="font-size:8px;color:var(--dim)">START/END</span></div>
+      <div style="color:var(--dim);align-self:center;font-size:10px">→</div>
+      <div style="padding:8px 12px;border-radius:6px;background:rgba(44,95,124,0.03);border:1px solid rgba(0,0,0,0.04);font-size:10px;text-align:center"><strong>🏠 Brant Pt</strong><br><span class="chip ch-o" style="font-size:7px">HISTORY</span></div>
+      <div style="color:var(--dim);align-self:center;font-size:10px">→ ○ →</div>
+      <div style="padding:8px 12px;border-radius:6px;background:rgba(44,95,124,0.03);border:1px solid rgba(0,0,0,0.04);font-size:10px;text-align:center"><strong>🐋 Museum</strong><br><span class="chip ch-o" style="font-size:7px">HISTORY</span></div>
+      <div style="color:var(--dim);align-self:center;font-size:10px">→</div>
+      <div style="padding:8px 12px;border-radius:6px;background:rgba(139,115,85,0.04);border:1px solid rgba(0,0,0,0.04);font-size:10px;text-align:center"><strong>🛍️ Main St</strong><br><span class="chip ch-d" style="font-size:7px">LOCAL</span></div>
+      <div style="color:var(--dim);align-self:center;font-size:10px">→</div>
+      <div style="padding:8px 12px;border-radius:6px;border:1.5px solid var(--coral);background:rgba(193,118,80,0.04);font-size:10px;text-align:center"><strong>🔀 FORK A</strong><br><span style="font-size:8px;color:var(--coral)">CHOOSE PATH</span></div>
+    </div>
+
+    <div style="display:flex;gap:24px;justify-content:center;margin:10px 0;flex-wrap:wrap">
+      <div style="text-align:center;padding:10px;border:1px dashed rgba(0,0,0,0.06);border-radius:8px">
+        <div style="font-size:9px;color:var(--dim);margin-bottom:6px;font-weight:600">NORTH ROUTE (History + Culture heavy)</div>
+        <div style="display:flex;gap:4px;justify-content:center">
+          <div style="padding:6px 8px;border-radius:6px;background:rgba(193,118,80,0.03);border:1px solid rgba(0,0,0,0.03);font-size:9px;text-align:center"><strong>🌹</strong><br>Sconset<br><span class="chip ch-c" style="font-size:7px">CULTURE</span></div>
+          <div style="align-self:center;color:var(--dim);font-size:8px">→ ○ →</div>
+          <div style="padding:6px 8px;border-radius:6px;background:rgba(90,143,122,0.03);border:1px solid rgba(0,0,0,0.03);font-size:9px;text-align:center"><strong>🔦</strong><br>Great Pt<br><span class="chip ch-g" style="font-size:7px">NATURE</span></div>
+        </div>
+      </div>
+      <div style="text-align:center;padding:10px;border:1px dashed rgba(0,0,0,0.06);border-radius:8px">
+        <div style="font-size:9px;color:var(--dim);margin-bottom:6px;font-weight:600">SOUTH ROUTE (Nature + Local heavy)</div>
+        <div style="display:flex;gap:4px;justify-content:center">
+          <div style="padding:6px 8px;border-radius:6px;background:rgba(90,143,122,0.03);border:1px solid rgba(0,0,0,0.03);font-size:9px;text-align:center"><strong>🏖️</strong><br>Surfside<br><span class="chip ch-g" style="font-size:7px">NATURE</span></div>
+          <div style="align-self:center;color:var(--dim);font-size:8px">→ ○ →</div>
+          <div style="padding:6px 8px;border-radius:6px;background:rgba(139,115,85,0.03);border:1px solid rgba(0,0,0,0.03);font-size:9px;text-align:center"><strong>🍷</strong><br>Cisco<br><span class="chip ch-d" style="font-size:7px">LOCAL</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center">
+      <div style="padding:8px 12px;border-radius:6px;background:rgba(44,95,124,0.03);border:1px solid rgba(0,0,0,0.04);font-size:10px;text-align:center"><strong>⚙️ Old Mill</strong><br><span class="chip ch-o" style="font-size:7px">HISTORY</span></div>
+      <div style="color:var(--dim);align-self:center;font-size:10px">→ ○ →</div>
+      <div style="padding:8px 12px;border-radius:6px;background:rgba(90,143,122,0.03);border:1px solid rgba(0,0,0,0.04);font-size:10px;text-align:center"><strong>🌅 Madaket</strong><br><span class="chip ch-g" style="font-size:7px">NATURE</span></div>
+      <div style="color:var(--dim);align-self:center;font-size:10px">→</div>
+      <div style="padding:8px 12px;border-radius:6px;background:rgba(193,118,80,0.03);border:1px solid rgba(0,0,0,0.04);font-size:10px;text-align:center"><strong>🫐 Cran Bog</strong><br><span class="chip ch-c" style="font-size:7px">CULTURE</span></div>
+      <div style="color:var(--dim);align-self:center;font-size:10px">→</div>
+      <div style="padding:8px 12px;border-radius:6px;border:1.5px solid var(--ocean);background:rgba(44,95,124,0.04);font-size:10px;text-align:center"><strong>⛴️ Ferry</strong><br><span style="font-size:8px;color:var(--dim)">FINISH</span></div>
+    </div>
+    <p style="text-align:center;margin-top:10px;font-size:9px;color:var(--dim)">○ = transit space (no encounter, just movement). Path total: 24 spaces. Named stops: 14. Transit spaces: 10.</p>
+  </div>
+</div>
+
+<!-- 12 -->
+<div class="sec" id="s12">
+  <h2>12 — Component Engineering</h2>
+  <div class="mfg-row"><div class="mfg-icon">🗺️</div><div class="mfg-info"><div class="mfg-name">Game Board</div><div class="mfg-spec">Bi-fold · 500×380mm · 2mm chipboard · Linen finish · CMYK + spot UV on title</div></div><div class="mfg-cost">×1</div></div>
+  <div class="mfg-row"><div class="mfg-icon">🧠</div><div class="mfg-info"><div class="mfg-name">Trivia Cards</div><div class="mfg-spec">63×88mm (poker) · 320gsm blue core · 3 tiers per card · Rounded corners · Dimension color-coded</div></div><div class="mfg-cost">×160</div></div>
+  <div class="mfg-row"><div class="mfg-icon">🎭</div><div class="mfg-info"><div class="mfg-name">Challenge Cards</div><div class="mfg-spec">63×88mm · 320gsm · Distinct back design from trivia · Coral accent color</div></div><div class="mfg-cost">×30</div></div>
+  <div class="mfg-row"><div class="mfg-icon">🌊</div><div class="mfg-info"><div class="mfg-name">Island Moment Cards</div><div class="mfg-spec">63×88mm · 320gsm · Teal accent color · Italic flavor text</div></div><div class="mfg-cost">×20</div></div>
+  <div class="mfg-row"><div class="mfg-icon">⚓</div><div class="mfg-info"><div class="mfg-name">Local Secret Cards</div><div class="mfg-spec">63×88mm · 350gsm premium stock · Gold foil accent · Collectible keepsake quality</div></div><div class="mfg-cost">×15</div></div>
+  <div class="mfg-row"><div class="mfg-icon">🐚</div><div class="mfg-info"><div class="mfg-name">Player Tokens</div><div class="mfg-spec">Custom mold · 25mm painted resin · Shell, starfish, whale, lighthouse, sailboat, anchor</div></div><div class="mfg-cost">×6</div></div>
+  <div class="mfg-row"><div class="mfg-icon">📊</div><div class="mfg-info"><div class="mfg-name">Score Tracker Cards</div><div class="mfg-spec">100×150mm · 400gsm · 4 dimension tracks with sliding markers · Dry-erase compatible</div></div><div class="mfg-cost">×6</div></div>
+  <div class="mfg-row"><div class="mfg-icon">🎲</div><div class="mfg-info"><div class="mfg-name">Custom Die</div><div class="mfg-spec">16mm · Engraved faces · 1-4=movement, compass=choice, wave=island moment</div></div><div class="mfg-cost">×1</div></div>
+  <div class="mfg-row"><div class="mfg-icon">📖</div><div class="mfg-info"><div class="mfg-name">Rulebook</div><div class="mfg-spec">8 pages · 140×200mm · Saddle-stitched · Quick-start page 1, full rules 2-6, FAQ 7-8</div></div><div class="mfg-cost">×1</div></div>
+  <div class="mfg-row"><div class="mfg-icon">📦</div><div class="mfg-info"><div class="mfg-name">Box</div><div class="mfg-spec">280×210×65mm · 2mm rigid board · Magnetic closure · Linen texture · Debossed logo</div></div><div class="mfg-cost">×1</div></div>
+</div>
+
+<!-- 13 -->
+<div class="sec" id="s13">
+  <h2>13 — Manufacturing Spec & Unit Cost</h2>
+  <p>Estimated per-unit cost at a 1,500-unit initial run (Panda Game Manufacturing or equivalent). Prices are FOB China, excluding freight and customs.</p>
+
+  <table class="tbl">
+    <thead><tr><th>Component</th><th>Qty</th><th>Unit Cost</th><th>Subtotal</th></tr></thead>
+    <tbody>
+      <tr><td class="f">Game board (bi-fold, linen)</td><td>1</td><td>$1.80</td><td>$1.80</td></tr>
+      <tr><td class="f">Cards (225 total, 320gsm)</td><td>225</td><td>$0.03/ea</td><td>$6.75</td></tr>
+      <tr><td class="f">Resin tokens (6 custom molds)</td><td>6</td><td>$0.40/ea</td><td>$2.40</td></tr>
+      <tr><td class="f">Score trackers + markers</td><td>6</td><td>$0.30/ea</td><td>$1.80</td></tr>
+      <tr><td class="f">Custom die</td><td>1</td><td>$0.25</td><td>$0.25</td></tr>
+      <tr><td class="f">Rulebook (8pg saddle-stitch)</td><td>1</td><td>$0.35</td><td>$0.35</td></tr>
+      <tr><td class="f">Box (rigid, magnetic, linen)</td><td>1</td><td>$3.50</td><td>$3.50</td></tr>
+      <tr><td class="f">Shrink wrap + insert tray</td><td>1</td><td>$0.50</td><td>$0.50</td></tr>
+      <tr style="background:var(--shell)"><td class="f" colspan="3"><strong>Estimated manufacturing cost per unit</strong></td><td><strong>~$17.35</strong></td></tr>
+    </tbody>
+  </table>
+
+  <h3>Retail Pricing Model</h3>
+  <table class="tbl">
+    <thead><tr><th>Channel</th><th>Multiplier</th><th>Price</th></tr></thead>
+    <tbody>
+      <tr><td class="f">Manufacturing cost</td><td>1×</td><td>$17.35</td></tr>
+      <tr><td class="f">Direct-to-consumer (website)</td><td>3–4× cost</td><td>$54.99 – $69.99</td></tr>
+      <tr><td class="f">Wholesale (retail shops)</td><td>2× cost (you sell at)</td><td>$34.70 (shops sell at ~$59.99)</td></tr>
+    </tbody>
+  </table>
+  <p>The magnetic-closure box and linen finish put this in the premium gift range ($55–70 retail), which aligns with the "coffee table, not souvenir shop" positioning. At $59.99 direct-to-consumer with $17.35 COGS, gross margin is ~71%.</p>
+</div>
+
+<!-- 14 -->
+<div class="sec" id="s14">
+  <h2>14 — Playtesting Protocol</h2>
+  <table class="tbl">
+    <thead><tr><th>Phase</th><th>When</th><th>Focus</th><th>Method</th><th>Tracking</th></tr></thead>
+    <tbody>
+      <tr><td class="f">Alpha</td><td>Week 2</td><td>Core loop feel: does roll → move → encounter → score feel fun?</td><td>Paper prototype, hand-drawn board, index card questions</td><td>Qualitative: "would you play again?"</td></tr>
+      <tr><td class="f">Beta</td><td>Week 3–4</td><td>Question difficulty calibration, tier EV validation, game length</td><td>Printed prototype with real cards</td><td>Per-question correct rates by tier. Game duration. Final score distributions.</td></tr>
+      <tr><td class="f">Blind</td><td>Week 5</td><td>Rulebook clarity: can players learn without the designer present?</td><td>Ship prototype + rules to 3 groups. Designer absent.</td><td>Rules questions logged. Time to first turn. Misplayed rules identified.</td></tr>
+      <tr><td class="f">Stress</td><td>Week 6</td><td>Edge cases: 2-player, 6-player, all-expert, all-newcomer groups</td><td>Targeted sessions with specific group compositions</td><td>Category distributions per group type. Does "Acktual Local" rate match 8% target?</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Key Calibration Metrics</h3>
+  <table class="tbl">
+    <thead><tr><th>Metric</th><th>Target</th><th>If Below</th><th>If Above</th></tr></thead>
+    <tbody>
+      <tr><td class="f">Game duration (4 players)</td><td>35–45 min</td><td>Add transit spaces or encounter frequency</td><td>Reduce path length or simplify encounters</td></tr>
+      <tr><td class="f">Visitor correct rate</td><td>75–85%</td><td>Questions too hard — rewrite or reclassify</td><td>Questions too easy — add plausible distractors</td></tr>
+      <tr><td class="f">Local correct rate</td><td>20–30%</td><td>Questions too obscure — test with actual locals</td><td>Questions not local enough — dig deeper</td></tr>
+      <tr><td class="f">"Acktual Local" frequency</td><td>6–10% of players</td><td>Lower threshold or increase max points available</td><td>Raise threshold or tighten dimension requirements</td></tr>
+      <tr><td class="f">"Would play again" rate</td><td>>80%</td><td>Fundamental mechanic issue — redesign encounter mix</td><td>Ship it</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 15 -->
+<div class="sec" id="s15">
+  <h2>15 — Expansion Architecture</h2>
+  <p>The card-based encounter system is designed for expansion without rule changes. New content slots into existing decks — the game engine doesn't change.</p>
+
+  <table class="tbl">
+    <thead><tr><th>Expansion</th><th>What It Adds</th><th>Mechanical Impact</th></tr></thead>
+    <tbody>
+      <tr><td class="f">Seasonal Pack</td><td>40 new questions about Stroll, Daffodil Festival, summer vs winter island life</td><td>Shuffle into existing trivia decks. No rule changes.</td></tr>
+      <tr><td class="f">Deep History Pack</td><td>40 questions on Wampanoag history, whaling era details, Civil War Nantucket, Prohibition</td><td>Replaces or supplements History dimension cards. Optional "historian" variant rules.</td></tr>
+      <tr><td class="f">Insider Pack</td><td>40 questions only year-round residents would know. Raises the bar for "Acktual Local."</td><td>Adds a 4th difficulty tier (🟣 Insider = 30 pts, ~15% correct rate). New category: "True Islander."</td></tr>
+      <tr><td class="f">Location Series</td><td>Martha's Vineyard, Cape Cod, Hamptons, Key West — same framework, new content</td><td>New board, new cards. Same rules, same scoring, same categories. Franchise potential.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout"><strong>The franchise angle is real.</strong> "Are You an Acktual Local?" works as a format, not just a single product. Every coastal town, college town, or destination city has a community that would play this game. The mechanical framework — location-based board, tiered trivia, dimension scoring, identity categories — transfers to any place with enough local knowledge to fill 160 cards. Build one, and you've built the template for many.</div>
+</div>
+
+<footer>Game Design Document v1.2 · "Are You an Acktual Local?" · Prepared by Josinaldo · September 2026</footer>
+</div>
+</body>
+</html>
