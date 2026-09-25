@@ -24,7 +24,7 @@ h1{font-family:var(--serif);font-weight:700;font-size:34px;line-height:1.15;marg
 h2{font-family:var(--serif);font-size:22px;font-weight:700;margin:0 0 4px}
 h3{font-family:var(--sans);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--ink2);margin:22px 0 8px}
 .secnum{font-family:var(--mono);font-size:12px;color:var(--mute);display:block;margin-bottom:2px}
-section{padding-top:48px}
+section{padding-top:28px}
 p{color:var(--ink2);max-width:760px;margin:6px 0}
 p b,li b{color:var(--ink)}
 .meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-family:var(--mono);font-size:11.5px;color:var(--ink2);margin-top:10px}
@@ -74,6 +74,21 @@ button.run:hover{filter:brightness(1.1)}
 .tier:last-child{border-bottom:0}
 .tier .pip{font-family:var(--mono);font-size:10px;font-weight:600;color:#fff;border-radius:3px;text-align:center;height:18px;line-height:18px}
 .tier .a{font-family:var(--mono);font-size:11px;color:var(--mute)}
+/* tabs */
+.tabbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);border-bottom:1px solid var(--line);margin:18px -22px 0;padding:0 22px}
+.tabs{display:flex;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;font-family:var(--sans);font-size:13px;font-weight:600;color:var(--mute);background:none;border:0;border-bottom:2px solid transparent;padding:12px 12px 10px;cursor:pointer;white-space:nowrap}
+.tab span{font-family:var(--mono);font-size:10px;margin-right:5px;color:var(--mute)}
+.tab:hover{color:var(--ink)}
+.tab.on{color:var(--harbor);border-bottom-color:var(--harbor)}
+.tab.on span{color:var(--harbor)}
+section{display:none}section.on{display:block}
+.pager{display:flex;justify-content:space-between;gap:10px;margin-top:36px;padding-top:16px;border-top:1px solid var(--line)}
+.pager button{font-family:var(--mono);font-size:12px;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:8px 14px;cursor:pointer;color:var(--ink)}
+.pager button:hover{border-color:var(--harbor);color:var(--harbor)}
+.pager button[disabled]{visibility:hidden}
+.tabintro{font-family:var(--mono);font-size:11px;color:var(--mute);margin-top:22px}
 footer{margin-top:60px;padding-top:16px;border-top:1px solid var(--line);font-family:var(--mono);font-size:11px;color:var(--mute)}
 </style>
 </head>
@@ -85,28 +100,13 @@ footer{margin-top:60px;padding-top:16px;border-top:1px solid var(--line);font-fa
   <h1>Are You an Acktual Local?</h1>
   <p>A Nantucket exploration and knowledge game. Players spend one island day moving across a road network, answering location-bound questions at a difficulty they choose, and racing the last boat home. The table crowns a winner; each player also receives an island identity.</p>
   <div class="meta">
-    <span>Players <b>2–6</b></span><span>Length <b>24–46 min</b> (simulated median)</span><span>Weight <b>light · 1.4/5</b></span><span>Age <b>12+ / 14+</b> (compliance decision, §14)</span><span>Prepared by <b>Josinaldo</b></span>
+    <span>Players <b>2–6</b></span><span>Length <b>24–46 min</b> (simulated median)</span><span>Weight <b>light · 1.4/5</b></span><span>Age <b>12+ / 14+</b> (compliance decision, §14)</span><span>Prepared by <b>Eduardo</b></span>
   </div>
   <p class="mono" style="font-size:11.5px;margin-top:10px;color:var(--mute)">Every balance number in this document comes from the Monte Carlo engine in §10 (the same code runs live on this page). Numbers are hypotheses to be confirmed by table playtests, not conclusions.</p>
-  <nav class="toc">
-    <a href="#s0"><span>00</span>Requirements traceability</a>
-    <a href="#s1"><span>01</span>Design constraints</a>
-    <a href="#s2"><span>02</span>System architecture</a>
-    <a href="#s3"><span>03</span>Turn state machine</a>
-    <a href="#s4"><span>04</span>Board graph & movement</a>
-    <a href="#s5"><span>05</span>Encounters & tier math</a>
-    <a href="#s6"><span>06</span>Content architecture</a>
-    <a href="#s7"><span>07</span>Scoring ledgers</a>
-    <a href="#s8"><span>08</span>Identity resolution</a>
-    <a href="#s9"><span>09</span>Balance model & calibration log</a>
-    <a href="#s10"><span>10</span>Live balance simulator</a>
-    <a href="#s11"><span>11</span>Rules engine reference</a>
-    <a href="#s12"><span>12</span>Prototype & print pipeline</a>
-    <a href="#s13"><span>13</span>Playtest protocol</a>
-    <a href="#s14"><span>14</span>Components, BOM, compliance</a>
-    <a href="#s15"><span>15</span>Plan & open questions</a>
-  </nav>
+  
 </header>
+<div class="tabbar"><div class="tabs" id="tabs" role="tablist"></div></div>
+<div class="tabintro" id="tabIntro"></div>
 
 <!-- 00 -->
 <section id="s0">
@@ -121,7 +121,7 @@ footer{margin-top:60px;padding-top:16px;border-top:1px solid var(--line);font-fa
       <tr><td class="mono">R4</td><td>Scoring or progression system</td><td>Island Score (victory, capped knowledge) separated from Knowledge Ledger (identity, uncapped)</td><td class="mono">§07</td></tr>
       <tr><td class="mono">R5</td><td>Player outcomes / categories</td><td>5 identities in island vernacular, resolved by depth + breadth, calibrated to 64.6% exact</td><td class="mono">§08</td></tr>
       <tr><td class="mono">R6</td><td>Balance strategy, knowledge, luck, replayability</td><td>Explicit win-rate targets per table mix; tunable parameter set; 270-card content pool</td><td class="mono">§09 §10</td></tr>
-      <tr><td class="mono">R7</td><td>Initial playable prototype</td><td>Print-and-play alpha kit generated from card data (CSV → PDF)</td><td class="mono">§12</td></tr>
+      <tr><td class="mono">R7</td><td>Initial playable prototype</td><td>Print-and-play alpha kit in week 1, generated from card data (JSON → PDF)</td><td class="mono">§12</td></tr>
       <tr><td class="mono">R8</td><td>Refinement through playtesting</td><td>4-phase protocol, instrumented metrics, decision gates, remote question calibration</td><td class="mono">§13</td></tr>
       <tr><td class="mono">R9</td><td>Components for production</td><td>Full BOM with specs, sheet-efficient card counts, cost model, compliance path</td><td class="mono">§14</td></tr>
       <tr><td class="mono">C1</td><td>Fun for visitors <i>and</i> deep locals</td><td>Tier self-selection, estimation rounds, Last Boat catch-up, lens cap</td><td class="mono">§05 §09</td></tr>
@@ -519,10 +519,10 @@ footer{margin-top:60px;padding-top:16px;border-top:1px solid var(--line);font-fa
   <div class="box scroll"><table>
     <thead><tr><th>Build</th><th>When</th><th>Form</th><th>Purpose</th></tr></thead>
     <tbody>
-      <tr><td><b>Alpha</b></td><td class="mono">wk 2</td><td>print-and-play: A4 board tiles, 90 cards on 250 gsm, pencil Passport</td><td>does the loop work at all</td></tr>
-      <tr><td><b>Beta</b></td><td class="mono">wk 4</td><td>short-run print (e.g. The Game Crafter / similar), full 270 cards, folded board</td><td>balance, length, question calibration</td></tr>
-      <tr><td><b>Digital harness</b></td><td class="mono">wk 3</td><td>browser build from the rules engine (§11)</td><td>remote blind tests; logs every decision</td></tr>
-      <tr><td><b>Pre-production</b></td><td class="mono">wk 6</td><td>vendor-ready files + spec sheet + RFQ</td><td>quote and sample from manufacturers</td></tr>
+      <tr><td><b>Alpha</b></td><td class="mono">wk 1</td><td>print-and-play: A4 board tiles, 90 cards on 250 gsm, pencil Passport</td><td>does the loop work at all</td></tr>
+      <tr><td><b>Digital harness</b></td><td class="mono">wk 2</td><td>browser build from the rules engine (§11)</td><td>remote tests in parallel with table tests; logs every decision</td></tr>
+      <tr><td><b>Beta</b></td><td class="mono">wk 2</td><td>local digital print (48 h turnaround) instead of mail-order POD, 150 cards, folded board</td><td>balance and length</td></tr>
+      <tr><td><b>Pre-production</b></td><td class="mono">wk 3</td><td>vendor-ready files + spec sheet + RFQ</td><td>quote and sample from manufacturers</td></tr>
     </tbody>
   </table></div>
   <div class="grid2">
@@ -570,10 +570,10 @@ footer{margin-top:60px;padding-top:16px;border-top:1px solid var(--line);font-fa
   <div class="box scroll"><table>
     <thead><tr><th>Phase</th><th>Wk</th><th>Tables</th><th>Composition</th><th>Question answered</th><th>Exit gate</th></tr></thead>
     <tbody>
-      <tr><td><b>Alpha</b></td><td class="mono">2</td><td class="num">4–6</td><td>designer present, mixed</td><td>Is the loop fun? Is anything confusing?</td><td>no rule question asked twice</td></tr>
-      <tr><td><b>Beta</b></td><td class="mono">3–4</td><td class="num">10–12</td><td>visitors + island residents</td><td>Do win rates and length match §09?</td><td>4p median 35–45 min; targets within ±10 pts</td></tr>
-      <tr><td><b>Blind</b></td><td class="mono">5</td><td class="num">4–6</td><td>new players, rulebook only</td><td>Can people learn it without us?</td><td>teach ≤ 4 min, ≤ 2 rules errors / game</td></tr>
-      <tr><td><b>Edge</b></td><td class="mono">5–6</td><td class="num">6</td><td>2p, 6p, all-expert, all-visitor</td><td>Does it hold at the extremes?</td><td>6p ≤ 50 min; all-visitor games still produce spread</td></tr>
+      <tr><td><b>Alpha</b></td><td class="mono">1</td><td class="num">3–4</td><td>designer present, mixed</td><td>Is the loop fun? Is anything confusing?</td><td>no rule question asked twice</td></tr>
+      <tr><td><b>Beta</b></td><td class="mono">2</td><td class="num">6–8 (+ remote)</td><td>visitors + island residents</td><td>Do win rates and length match §09?</td><td>4p median 35–45 min; targets within ±10 pts</td></tr>
+      <tr><td><b>Blind</b></td><td class="mono">3</td><td class="num">3–4</td><td>new players, rulebook only</td><td>Can people learn it without us?</td><td>teach ≤ 4 min, ≤ 2 rules errors / game</td></tr>
+      <tr><td><b>Edge</b></td><td class="mono">3</td><td class="num">4</td><td>2p, 6p, all-expert, all-visitor</td><td>Does it hold at the extremes?</td><td>6p ≤ 50 min; all-visitor games still produce spread</td></tr>
     </tbody>
   </table></div>
   <h3>Instrumentation</h3>
@@ -616,7 +616,7 @@ footer{margin-top:60px;padding-top:16px;border-top:1px solid var(--line);font-fa
       <tr><td colspan="3"><b>Estimated landed cost</b></td><td class="num"><b>≈ 12.35</b></td></tr>
     </tbody>
   </table></div>
-  <p class="mono" style="font-size:11px">Costs are indicative planning figures, not quotes. Real numbers come from the RFQ in week 6 and vary with vendor, run size and materials.</p>
+  <p class="mono" style="font-size:11px">Costs are indicative planning figures, not quotes. Real numbers come from the RFQ in week 3 and vary with vendor, run size and materials.</p>
   <div class="grid2">
     <div class="box"><h3 style="margin-top:0">Pricing check</h3><table>
       <tr><td>Wholesale to island shops (≈ 2.5× landed)</td><td class="num">≈ $31</td></tr>
@@ -633,12 +633,23 @@ footer{margin-top:60px;padding-top:16px;border-top:1px solid var(--line);font-fa
   <span class="secnum">15</span><h2>Plan & open questions</h2>
   <div class="fig scroll">
     <svg id="ganttSvg" viewBox="0 0 900 275" width="100%" style="min-width:720px" role="img" aria-label="Six-week plan"></svg>
-    <div class="figcap">FIG 15.1 · 6-week Phase 1 · ◆ = decision gate with the client</div>
+    <div class="figcap">FIG 15.1 · 3-week Phase 1 · ◆ = decision gate with the client</div>
   </div>
+  <h3>What 3 weeks changes</h3>
+  <div class="box scroll"><table>
+    <thead><tr><th>Area</th><th>6-week plan</th><th>3-week plan</th><th>Trade-off</th></tr></thead>
+    <tbody>
+      <tr><td><b>Parallel work</b></td><td>sequential phases</td><td>digital harness and table tests run in parallel from week 2</td><td>remote playtests cover the table-count gap</td></tr>
+      <tr><td><b>Beta print</b></td><td>mail-order POD</td><td>local digital print, 48 h</td><td>lower card quality; irrelevant for testing</td></tr>
+      <tr><td><b>Question content</b></td><td>480 questions drafted</td><td><b>1 full region deck (40 cards, 120 questions) calibrated</b> + templates, lint rules and briefs for the other 3</td><td>remaining 360 questions become a content task after Phase 1 (Q1)</td></tr>
+      <tr><td><b>Playtest tables</b></td><td>~26</td><td>~16 table + remote sessions</td><td>edge cases (2p, 6p) get fewer tables; flagged for recheck</td></tr>
+      <tr><td><b>Unchanged</b></td><td colspan="3">rules, balance targets, identity calibration, rulebook, component spec, BOM, RFQ package</td></tr>
+    </tbody>
+  </table></div>
   <div class="box scroll"><table>
     <thead><tr><th>#</th><th>Question for the client</th><th>Why it matters</th></tr></thead>
     <tbody>
-      <tr><td class="mono">Q1</td><td>Who writes the 480 questions: you, a local writer, or me with your review?</td><td>largest content cost; sets timeline for Beta</td></tr>
+      <tr><td class="mono">Q1</td><td>Who writes the 480 questions: you, a local writer, or me with your review?</td><td>largest content cost; Phase 1 calibrates 1 of 4 region decks, the other 360 questions follow</td></tr>
       <tr><td class="mono">Q2</td><td>Identity names: are "Wash-Ashore" and "Summer Person" on-brand, or too pointed?</td><td>tone of the payoff moment</td></tr>
       <tr><td class="mono">Q3</td><td>Primary channel: island retail, your site, or both?</td><td>MSRP, box size, run size</td></tr>
       <tr><td class="mono">Q4</td><td>Age grade 12+ or 14+?</td><td>compliance path (§14)</td></tr>
@@ -647,7 +658,8 @@ footer{margin-top:60px;padding-top:16px;border-top:1px solid var(--line);font-fa
   </table></div>
 </section>
 
-<footer>Are You an Acktual Local? · Game Design Specification v0.3 · prepared by Josinaldo for Acktual Local · engine build <span id="buildId"></span></footer>
+<div class="pager"><button id="prevBtn">← prev</button><button id="nextBtn">next →</button></div>
+<footer>Are You an Acktual Local? · Game Design Specification v0.3 · prepared by Eduardo for Acktual Local · engine build <span id="buildId"></span></footer>
 </div>
 
 <script>
@@ -854,11 +866,39 @@ const RCOL={start:'#1f2d38',town:'#27546d',moors:'#5d8a75',east:'#b5533c',south:
   $('runBtn').addEventListener('click',run);run();
 })();
 
+/* tabs */
+(function(){const G=[
+  ['overview','Overview',['s0','s1','s2'],'00–02 · requirements, constraints, architecture'],
+  ['play','Gameplay',['s3','s4'],'03–04 · turn structure, board graph, movement'],
+  ['cards','Questions',['s5','s6'],'05–06 · encounters, tier math, content system'],
+  ['score','Scoring',['s7','s8'],'07–08 · ledgers, passport, identity'],
+  ['balance','Balance',['s9','s10'],'09–10 · targets, calibration log, live simulator'],
+  ['build','Build',['s11','s12'],'11–12 · rules engine, prototype, print pipeline'],
+  ['test','Playtest',['s13'],'13 · protocol, instrumentation, calibration'],
+  ['prod','Production',['s14'],'14 · components, BOM, compliance'],
+  ['plan','Plan',['s15'],'15 · 3-week plan, open questions']];
+  const bar=$('tabs');bar.innerHTML=G.map((g,i)=>`<button class="tab" role="tab" data-i="${i}"><span>${String(i+1).padStart(2,'0')}</span>${g[1]}</button>`).join('');
+  let cur=0;
+  function show(i,scroll){cur=i;const ids=G[i][2];document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',ids.includes(s.id)));
+    bar.querySelectorAll('.tab').forEach((b,j)=>{b.classList.toggle('on',j===i);b.setAttribute('aria-selected',j===i)});
+    bar.children[i].scrollIntoView({block:'nearest',inline:'center'});
+    $('tabIntro').textContent=G[i][3];
+    $('prevBtn').disabled=i===0;$('nextBtn').disabled=i===G.length-1;
+    $('prevBtn').textContent=i>0?'← '+G[i-1][1]:'';$('nextBtn').textContent=i<G.length-1?G[i+1][1]+' →':'';
+    try{history.replaceState(null,'','#'+G[i][0])}catch(e){}
+    if(scroll)document.querySelector('.tabbar').scrollIntoView({behavior:'smooth',block:'start'});}
+  bar.addEventListener('click',e=>{const b=e.target.closest('.tab');if(b)show(+b.dataset.i,true)});
+  $('prevBtn').addEventListener('click',()=>show(Math.max(0,cur-1),true));
+  $('nextBtn').addEventListener('click',()=>show(Math.min(G.length-1,cur+1),true));
+  document.addEventListener('keydown',e=>{if(e.target.matches('input,select,textarea'))return;if(e.key==='ArrowRight')show(Math.min(G.length-1,cur+1),false);if(e.key==='ArrowLeft')show(Math.max(0,cur-1),false)});
+  let h='';try{h=location.hash.slice(1)}catch(e){}const fromHash=G.findIndex(g=>g[0]===h||g[2].includes(h));show(fromHash>=0?fromHash:0,false);
+})();
+
 /* §15 gantt */
-(function(){const L=265,W=900,wk=(W-L-20)/6;let s='';for(let i=0;i<6;i++){s+=`<rect x="${L+i*wk}" y="10" width="${wk}" height="22" fill="${i%2?'#efeae1':'#f7f4ee'}"/><text x="${L+i*wk+wk/2}" y="25" font-size="10.5" text-anchor="middle" fill="#46535e" font-family="IBM Plex Mono">week ${i+1}</text>`}
-  const rows=[['System design + rules v1',0,1.2,'#27546d'],['Alpha kit + alpha tests',0.8,1.4,'#27546d'],['Content framework + question drafting',1,3.5,'#9a6a47'],['Digital playtest harness',1.8,1.4,'#5d8a75'],['Beta print + beta tests',2.6,1.8,'#27546d'],['Remote question calibration',3,2.2,'#9a6a47'],['Rulebook + blind tests',4.2,1.2,'#b5533c'],['Component spec, BOM, RFQ package',4.8,1.2,'#b5533c']];
+(function(){const L=265,W=900,wk=(W-L-20)/3;let s='';for(let i=0;i<3;i++){s+=`<rect x="${L+i*wk}" y="10" width="${wk}" height="22" fill="${i%2?'#efeae1':'#f7f4ee'}"/><text x="${L+i*wk+wk/2}" y="25" font-size="10.5" text-anchor="middle" fill="#46535e" font-family="IBM Plex Mono">week ${i+1}</text>`}
+  const rows=[['System design + rules v1',0,0.5,'#27546d'],['Alpha kit + alpha tests',0.35,0.65,'#27546d'],['Content framework + region deck 1',0.5,1.5,'#9a6a47'],['Digital playtest harness',0.9,0.6,'#5d8a75'],['Beta print + table/remote tests',1.1,0.9,'#27546d'],['Remote question calibration',1.4,1.2,'#9a6a47'],['Rulebook + blind tests',2,0.7,'#b5533c'],['Component spec, BOM, RFQ package',2.3,0.7,'#b5533c']];
   rows.forEach(([n,st,d,c],i)=>{const y=44+i*24;s+=`<text x="${L-10}" y="${y+12}" font-size="11" text-anchor="end" fill="#1f2d38">${n}</text><rect x="${L+st*wk}" y="${y+1}" width="${d*wk}" height="15" rx="3" fill="${c}"/>`});
-  [[1.9,'rules lock'],[3.9,'balance lock'],[5.95,'Phase 1 handoff']].forEach(([w,n])=>{const x=L+w*wk;s+=`<line x1="${x}" y1="34" x2="${x}" y2="244" stroke="#b5533c" stroke-dasharray="3 3"/><rect x="${x-5}" y="240" width="10" height="10" transform="rotate(45 ${x} 245)" fill="#b5533c"/><text x="${x}" y="266" font-size="9.5" text-anchor="${w>5?'end':'middle'}" fill="#b5533c" font-family="IBM Plex Mono">${n}</text>`});
+  [[1,'rules lock'],[2,'balance lock'],[2.98,'Phase 1 handoff']].forEach(([w,n])=>{const x=L+w*wk;s+=`<line x1="${x}" y1="34" x2="${x}" y2="244" stroke="#b5533c" stroke-dasharray="3 3"/><rect x="${x-5}" y="240" width="10" height="10" transform="rotate(45 ${x} 245)" fill="#b5533c"/><text x="${x}" y="266" font-size="9.5" text-anchor="${w>2.5?'end':'middle'}" fill="#b5533c" font-family="IBM Plex Mono">${n}</text>`});
   $('ganttSvg').innerHTML=s;$('buildId').textContent='sim-v2.3';})();
 </script>
 </body>
